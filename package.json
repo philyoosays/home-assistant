@@ -1,0 +1,40 @@
+{
+  "name": "helios",
+  "version": "0.0.1",
+  "description": "A home assistant",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "both": "concurrently \"cd client && yarn start-dev\" \"npm run dev\"",
+    "clean": "rm -rf node_modules && rm -rf client/node_modules",
+    "react-install": "cd client && yarn install",
+    "installer": "yarn install && npm run react-install",
+    "heroku-postbuild": "cd client && yarn && yarn run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/philyoosays/home-assistant.git"
+  },
+  "author": "Phil Yoo - philyoosays@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/philyoosays/home-assistant/issues"
+  },
+  "homepage": "https://github.com/philyoosays/home-assistant#readme",
+  "devDependencies": {
+    "concurrently": "^3.6.0",
+    "nodemon": "^1.17.5"
+  },
+  "dependencies": {
+    "dotenv": "^6.0.0",
+    "bcrypt": "^3.0.0",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "jsonwebtoken": "^8.3.0",
+    "morgan": "^1.9.0",
+    "path": "^0.12.7",
+    "pg-promise": "^8.4.5"
+  }
+}
