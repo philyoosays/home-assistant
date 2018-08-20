@@ -29,8 +29,12 @@ const BehaviorForCircles = {
     }, 19000)
   },
 
+  smallListening(setTheState, rando, spin) {
+    setTheState('smallTime', 8000, 'smallSpin', spin + 360)
+  },
+
   bigProcessing(setTheState, rando) {
-    setTheState('bigSpin', rando(720) - 360), 'bigTime', rando(2500, 1500)
+    setTheState('bigSpin', rando(720) - 360, 'bigTime', rando(2500, 1500))
   },
 
   bigChilling(setTheState, rando) {
@@ -38,8 +42,7 @@ const BehaviorForCircles = {
   },
 
   bigListening(setTheState, rando, spin) {
-    const coin = this.coinFlip()
-    setTheState('bigSpin', spin + rando(35, 10),)
+    setTheState('bigTime', 10000, 'bigSpin', spin + 360)
   },
 
   coinFlip(bias) {

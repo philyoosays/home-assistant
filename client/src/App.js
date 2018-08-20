@@ -8,14 +8,23 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      speechResults: undefined
     };
+
+    this.setTheState = this.setTheState.bind(this);
+  }
+
+  setTheState(key, value) {
+    this.setState({
+      [key]: value
+    })
   }
 
   render() {
     return (
       <div className="main-container">
-
-        <ActivateListen />
+        <p style={{color:'white'}}>{this.state.speechResults}</p>
+        <ActivateListen setParentState={ this.setTheState }/>
       </div>
     );
   }

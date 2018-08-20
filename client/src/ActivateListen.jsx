@@ -1,5 +1,6 @@
 import React from 'react';
 
+import Listener from './Listener';
 import BehaviorCircles from './BehaviorCircles';
 
 import circleIO from './assets/collection-jarvis/circle-inner-outer.png';
@@ -20,8 +21,11 @@ const {
   bigProcessing,
   bigChilling,
   bigListening,
+  coinFlip
 
 } = BehaviorCircles;
+
+const { recognition, SpeechRecognitionEvent } = Listener;
 
 export default class ActivateListen extends React.Component {
   constructor(props) {
@@ -33,6 +37,7 @@ export default class ActivateListen extends React.Component {
       bigImage: circleIO,
       bigOpacity: 1,
       bigInterval: undefined,
+      smallZ: 5,
       smallSpin: 30,
       smallTime: 5000,
       smallScale: 0.70,
@@ -57,11 +62,11 @@ export default class ActivateListen extends React.Component {
       await this.setTheState('listenState', 'chilling', 'arcOpacity', 0)
       this.stopIntervals()
       console.log('slowingdown', this.state.listenState)
-    }, 10000)
+    }, 1000)
 
     let bigInterval;
     let smallInterval;
-    let ratioRandom = (num) => Math.random() >= num ? true : false;
+    let ratioRandom = (num) => coinFlip(num);
 
     this.setTheState('bigSpin', this.rando(720) - 360, 'bigTime', this.rando(4000, 300))
     this.setTheState('smallSpin', this.rando(90, 25), 'smallTime', this.rando(600, 200))
@@ -78,7 +83,28 @@ export default class ActivateListen extends React.Component {
         break;
 
       case 'listening':
-        bigInterval = setInterval(() => bigListening(), )
+        this.setTheState('bigTime', 2800, 'bigScale', 1)
+        this.setTheState('smallTime', 2500, 'smallScale', '1.4')
+        this.setTheState('centerScale', 1, 'centerTime', 4000)
+        setTimeout(() => {
+          bigInterval = setInterval(() => bigListening(this.setTheState, this.rando, this.state.bigSpin), 10000);
+          smallInterval = setInterval(() => smallListening(this.setTheState, this.rando, this.state.smallSpin), 8000);
+          recognition.start()
+          recognition.onresult = (event) => {
+            console.log('event', event)
+          }
+          recognition.onspeechend = function() {
+            recognition.stop();
+          }
+
+          recognition.onnomatch = function(event) {
+            diagnostic.textContent = "I didn't recognise that color.";
+          }
+
+          recognition.onerror = function(event) {
+            diagnostic.textContent = 'Error occurred in recognition: ' + event.error;
+          }
+        }, 2800)
         break;
     }
 
@@ -107,6 +133,12 @@ export default class ActivateListen extends React.Component {
             this.setTheState('arcOpacity', 1)
           }, 1000)
           setTimeout(() => {
+            let timeObj = {
+              theBigTime: 1500,
+              theSmallTime: 1500,
+              theCenterTime: 1500
+            }
+            this.reset(false, timeObj);
             this.setTheState('listenState', 'listening')
           }, 1700)
         })
@@ -139,6 +171,45 @@ export default class ActivateListen extends React.Component {
     }
   }
 
+  reset(showOpacity, newTimes) {
+    if(showOpacity) {
+      this.setTheState({
+        bigOpacity: 1,
+        smallOpacity: 1
+      })
+    }
+
+    let theTimeObj = {
+      theBigTime: 5000,
+      theSmallTime: 5000,
+      theCenterTime: 20000,
+    }
+
+    if(newTimes) {
+      for(let key in newTimes) {
+        theTimeObj[key] = newTimes[key]
+      }
+    }
+
+    let { theBigTime, theSmallTime, theCenterTime } = theTimeObj;
+
+    this.setState({
+      bigSpin: 0,
+      bigTime: theBigTime,
+      bigScale: 1,
+      bigImage: circleIO,
+      bigInterval: undefined,
+      smallSpin: 30,
+      smallTime: theSmallTime,
+      smallScale: 0.70,
+      smallImage: circleFCW,
+      smallInterval: undefined,
+      centerSpin: 360,
+      centerTime: theCenterTime,
+      centerScale: 0,
+    })
+  }
+
   async setTheState(key, value, keyTwo, valueTwo, keyThree, valueThree, keyFour, valueFour) {
     let newState = {
       [key]: value,
@@ -165,12 +236,18 @@ export default class ActivateListen extends React.Component {
       transition: `all ${parseFloat(this.rando(this.state.bigTime)/1000)}s ease-in-out`,
       transform: `rotate(${this.rando(this.state.bigSpin)}deg) scale(${this.state.bigScale})`,
       opacity: this.state.bigOpacity,
+      top: this.state.listenState === 'listening' ? '0px' : '2px',
+      left: this.state.listenState === 'listening' ? '5px' : '8px'
     }
 
     const styleSmall = {
       transition: `all ${parseFloat(this.rando(this.state.smallTime)/1000)}s`,
-      transform: `rotate(${this.rando(this.state.smallSpin)}deg) scale(${this.state.smallScale})`,
+      // transform: `rotate(${this.rando(this.state.smallSpin)}deg) scale(${this.state.smallScale})`,
+      transform: `rotate(0deg) scale(${this.state.smallScale})`,
       opacity: this.state.smallOpacity,
+      top: this.state.listenState === 'listening' ? '-35px' : '6px',
+      left: this.state.listenState === 'listening' ? '0px' : '0px',
+      zIndex: this.state.listenState === 'listening' ? '3' : '5',
     }
 
     const styleCenter = {
@@ -203,7 +280,7 @@ export default class ActivateListen extends React.Component {
           <figure className="listen-arc-container" style={ styleArc }>
             <img src={ arcReactor } className="listen-ai-arc" alt="arc-reactor" />
           </figure>
-          <figure className="listen-arcshadow-container">
+          <figure className="listen-arcshadow-container" style={{ visibility: 'hidden' }}>
             <img src={ arcReactor } className="listen-ai-arcshadow" alt="arc-reactor-shadow" />
           </figure>
         </article>
