@@ -62,19 +62,19 @@ export default class ActivateListen extends React.Component {
       await this.setTheState('listenState', 'chilling', 'arcOpacity', 0)
       this.stopIntervals()
       console.log('slowingdown', this.state.listenState)
-    }, 1000)
+    }, 5000)
 
     let bigInterval;
     let smallInterval;
     let ratioRandom = (num) => coinFlip(num);
 
-    this.setTheState('bigSpin', this.rando(720) - 360, 'bigTime', this.rando(4000, 300))
-    this.setTheState('smallSpin', this.rando(90, 25), 'smallTime', this.rando(600, 200))
+    // this.setTheState('bigSpin', this.rando(720) - 360, 'bigTime', this.rando(4000, 300))
+    // this.setTheState('smallSpin', this.rando(90, 25), 'smallTime', this.rando(600, 200))
 
     switch(this.state.listenState) {
       case 'chilling':
-        bigInterval = setInterval(() => bigChilling(this.setTheState, this.rando), 15000)
-        smallInterval = setInterval(() => smallChilling(this.setTheState, this.rando, this.state.smallSpin, this.makeTimerLadder), ratioRandom(0.7) ? 3600 : this.rando(19000, 12000))
+        bigInterval = setInterval(() => {bigChilling(this.setTheState, this.rando)}, 15000)
+        smallInterval = setInterval(() => {smallChilling(this.setTheState, this.rando, this.state.smallSpin, this.makeTimerLadder)}, ratioRandom(0.7) ? 3600 : this.rando(19000, 12000))
         break;
 
       case 'processing':
@@ -83,28 +83,8 @@ export default class ActivateListen extends React.Component {
         break;
 
       case 'listening':
-        this.setTheState('bigTime', 2800, 'bigScale', 1)
-        this.setTheState('smallTime', 2500, 'smallScale', '1.4')
-        this.setTheState('centerScale', 1, 'centerTime', 4000)
-        setTimeout(() => {
-          bigInterval = setInterval(() => bigListening(this.setTheState, this.rando, this.state.bigSpin), 10000);
-          smallInterval = setInterval(() => smallListening(this.setTheState, this.rando, this.state.smallSpin), 8000);
-          recognition.start()
-          recognition.onresult = (event) => {
-            console.log('event', event)
-          }
-          recognition.onspeechend = function() {
-            recognition.stop();
-          }
-
-          recognition.onnomatch = function(event) {
-            diagnostic.textContent = "I didn't recognise that color.";
-          }
-
-          recognition.onerror = function(event) {
-            diagnostic.textContent = 'Error occurred in recognition: ' + event.error;
-          }
-        }, 2800)
+        bigInterval = setInterval(() => bigListening(this.setTheState, this.rando, this.state.bigSpin), 10000);
+        smallInterval = setInterval(() => smallListening(this.setTheState, this.rando, this.state.smallSpin), 8000);
         break;
     }
 
@@ -120,28 +100,36 @@ export default class ActivateListen extends React.Component {
     clearInterval(this.state.smallInterval);
   }
 
-  handleClick() {
+  async handleClick() {
     console.log('clicked')
     switch(this.state.listenState) {
       case 'chilling':
-        setTimeout(() => {
+        await setTimeout(async () => {
           this.setTheState('bigScale', 1.43, 'bigTime', 500)
           this.setTheState('smallScale', 1.00, 'smallTime', 600)
-          setTimeout(() => {
+          await setTimeout(() => {
             this.setTheState('bigScale', 0, 'bigTime', 500, 'bigSpin', 360 * 8)
             this.setTheState('smallScale', 0, 'smallTime', 600, 'smallSpin', 360 * 10)
             this.setTheState('arcOpacity', 1)
           }, 1000)
-          setTimeout(() => {
+          await setTimeout(async () => {
             let timeObj = {
-              theBigTime: 1500,
-              theSmallTime: 1500,
-              theCenterTime: 1500
+              theBigTime: 2800,
+              theSmallTime: 2500,
+              theCenterTime: 4000
             }
-            this.reset(false, timeObj);
-            this.setTheState('listenState', 'listening')
+            await this.reset(false, timeObj);
+            await this.setTheState('bigScale', 1, 'listenState', 'listening')
+            await this.stopIntervals();
           }, 1700)
         })
+
+        setTimeout(() => {
+          this.startListening()
+        }, 3000)
+        break;
+      case 'listening':
+
         break;
       default:
         break;
@@ -229,6 +217,26 @@ export default class ActivateListen extends React.Component {
     }
 
     await this.setState( newState );
+  }
+
+  startListening() {
+    recognition.start();
+    recognition.onresult = (event) => {
+      console.log('Speech event', event)
+      const result = event.results[event.length - 1].transcript;
+
+    }
+    recognition.onspeechend = function() {
+      recognition.stop();
+    }
+
+    recognition.onnomatch = function(event) {
+      console.log('No Match')
+    }
+
+    recognition.onerror = function(event) {
+      console.log('error')
+    }
   }
 
   render() {
