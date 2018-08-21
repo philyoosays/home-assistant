@@ -1,7 +1,7 @@
 import React from 'react';
 
+import GoFetch from './utilities/GoFetch';
 import Listener from './utilities/Listener';
-import SpeechCenter from './utilities/SpeechCenter';
 import BehaviorCircles from './utilities/BehaviorCircles';
 
 import circleIO from './assets/collection-jarvis/circle-inner-outer.png';
@@ -28,8 +28,6 @@ const {
 
 const { recognition, SpeechRecognitionEvent } = Listener;
 
-const { myName, speechRouter } = SpeechCenter;
-
 export default class ActivateListen extends React.Component {
   constructor(props) {
     super(props)
@@ -50,53 +48,73 @@ export default class ActivateListen extends React.Component {
       centerSpin: 360,
       centerTime: 20000,
       centerScale: 0,
+      counter: 0,
 
       listenState: 'processing',
       arcOpacity: 1,
       arcFilter: 'none',
+      arcShadowOpacity: 0,
     };
 
     this.setTheState = this.setTheState.bind(this);
     this.makeTimerLadder = this.makeTimerLadder.bind(this);
+    this.startListening = this.startListening.bind(this);
   }
 
   componentDidMount() {
 
+    console.log('component re-mounted')
+    this.setTheState('listenState', 'processing');
+    this.behaviorSwitch()
+
     setTimeout( async () => {
-      await this.setTheState('listenState', 'chilling', 'arcOpacity', 0)
-      this.stopIntervals()
+      await this.setTheState('listenState', 'chilling', 'arcOpacity', 0, 'arcShadowOpacity', 1)
       console.log('slowingdown', this.state.listenState)
     }, 5000)
+  }
 
-    let bigInterval;
-    let smallInterval;
-    let ratioRandom = (num) => coinFlip(num);
-
-    // this.setTheState('bigSpin', this.rando(720) - 360, 'bigTime', this.rando(4000, 300))
-    // this.setTheState('smallSpin', this.rando(90, 25), 'smallTime', this.rando(600, 200))
-
-    switch(this.state.listenState) {
-      case 'chilling':
-        bigInterval = setInterval(() => {bigChilling(this.setTheState, this.rando)}, 15000)
-        smallInterval = setInterval(() => {smallChilling(this.setTheState, this.rando, this.state.smallSpin, this.makeTimerLadder)}, ratioRandom(0.7) ? 3600 : this.rando(19000, 12000))
-        break;
-
-      case 'processing':
-        bigInterval = setInterval(() => bigProcessing(this.setTheState, this.rando), 2500)
-        smallInterval = setInterval(() => smallProcessing(this.setTheState, this.rando, this.state.smallSpin, this.makeTimerLadder), ratioRandom(0.7) ? 3600 : this.rando(6000, 1000))
-        break;
-
-      case 'listening':
-        bigInterval = setInterval(() => bigListening(this.setTheState, this.rando, this.state.bigSpin), 10000);
-        smallInterval = setInterval(() => smallListening(this.setTheState, this.rando, this.state.smallSpin), 8000);
-        break;
+  async componentDidUpdate(prevProps, prevState) {
+    if(prevState.listenState !== this.state.listenState) {
+      this.behaviorSwitch()
     }
-
-    this.setTheState('bigInterval', bigInterval, 'smallInterval', smallInterval)
   }
 
   componentWillUnmount() {
     this.stopIntervals();
+  }
+
+  async behaviorSwitch() {
+    await this.stopIntervals();
+
+    let bigInterval;
+    let smallInterval;
+    let dontSetInterval = false;
+    let ratioRandom = (num) => coinFlip(num);
+    switch(this.state.listenState) {
+      case 'chilling':
+        console.log('switch chilling')
+        bigInterval = setInterval(() => bigChilling(this.setTheState, this.rando), 15000)
+        smallInterval = setInterval(() => smallChilling(this.setTheState, this.rando, this.state.smallSpin), this.rando(19000, 12000))
+        break;
+
+      case 'processing':
+        console.log('switch processing')
+        bigInterval = setInterval(() => bigProcessing(this.setTheState, this.rando), 2500)
+        smallInterval = setInterval(() => smallProcessing(this.setTheState, this.rando, this.state.smallSpin, this.makeTimerLadder), this.rando(6000, 1000))
+        break;
+
+      case 'listening':
+        console.log('switch listening')
+        dontSetInterval = true;
+        this.setTheState('bigSpin', 0, 'bigTime', 0, 'smallSpin', 0, 'smallTime', 0)
+        // bigInterval = setInterval(() => bigListening(this.setTheState, this.rando, this.state.bigSpin), 10000);
+        // // smallInterval = setInterval(() => smallListening(this.setTheState, this.rando, this.state.smallSpin), 8000);
+        // smallInterval = smallListening(this.setTheState, this.rando, this.state.smallSpin);
+        break;
+    }
+    if(!dontSetInterval) {
+      this.setTheState('bigInterval', bigInterval, 'smallInterval', smallInterval)
+    }
   }
 
   async handleClick() {
@@ -118,8 +136,11 @@ export default class ActivateListen extends React.Component {
               theCenterTime: 4000
             }
             await this.reset(false, timeObj);
-            await this.setTheState('bigScale', 1, 'listenState', 'listening')
-            await this.stopIntervals();
+            this.setTheState('bigScale', 1, 'listenState', 'listening')
+            this.setTheState('bigSpin', 720, 'smallSpin', 1080)
+            setTimeout( async () => {
+              await this.setTheState('bigSpin', 0, 'bigTime', 0, 'smallSpin', 0, 'smallTime', 0)
+            }, 3000)
           }, 1700)
         })
 
@@ -128,7 +149,8 @@ export default class ActivateListen extends React.Component {
         }, 3000)
         break;
       case 'listening':
-
+        this.reset(true)
+        this.setTheState('listenState', 'chilling')
         break;
       default:
         break;
@@ -185,12 +207,10 @@ export default class ActivateListen extends React.Component {
       bigTime: theBigTime,
       bigScale: 1,
       bigImage: circleIO,
-      bigInterval: undefined,
       smallSpin: 30,
       smallTime: theSmallTime,
       smallScale: 0.70,
       smallImage: circleFCW,
-      smallInterval: undefined,
       centerSpin: 360,
       centerTime: theCenterTime,
       centerScale: 0,
@@ -218,15 +238,14 @@ export default class ActivateListen extends React.Component {
     await this.setState( newState );
   }
 
-  startListening(acknowledgeless) {
+  startListening(acknowledgeless, setTheState) {
     recognition.start();
     recognition.onresult = (event) => {
-      console.log('Speech event', event)
+
       const result = event.results['0']['0'].transcript;
-      console.log('Result: ', result);
-      console.log('Event Keys: ', Object.keys(event.results))
-      console.log('MyName: ', myName(result))
-      if(myName(result)) {
+      console.log(result)
+
+      if(result.toLowerCase === 'helios') {
         this.setTheState('arcFilter', 'sepia(100%)');
         setTimeout(() => {
           this.startListening(true);
@@ -234,20 +253,34 @@ export default class ActivateListen extends React.Component {
         recognition.stop();
       }
       if(acknowledgeless) {
-        speechRouter(result);
+        fetch('/api/analyze', {
+          body: JSON.stringify(result),
+          headers: {
+            'content-type': 'application/json',
+            secretHandshake: process.env.REACT_APP_SECRET
+          },
+          method: 'POST'
+        })
+        .then(response => response.json())
+          .then(data => {
+            console.log(data)
+          })
         this.props.setParentState('speechResults', result);
       }
     }
-    recognition.onspeechend = function() {
+    recognition.onspeechend = (event) => {
+      console.log('stopping')
       recognition.stop();
+      this.setTheState('listenState', 'chilling')
     }
 
-    recognition.onnomatch = function(event) {
+    recognition.onnomatch = (event) => {
       console.log('No Match')
     }
 
-    recognition.onerror = function(event) {
+    recognition.onerror = (event) => {
       console.log('error')
+      this.setTheState('listenState', 'chilling')
     }
   }
 
@@ -259,7 +292,7 @@ export default class ActivateListen extends React.Component {
   render() {
     const styleBig = {
       transition: `all ${parseFloat(this.rando(this.state.bigTime)/1000)}s ease-in-out`,
-      transform: `rotate(${this.rando(this.state.bigSpin)}deg) scale(${this.state.bigScale})`,
+      transform: `rotate(${this.state.bigSpin}deg) scale(${this.state.bigScale})`,
       opacity: this.state.bigOpacity,
       top: this.state.listenState === 'listening' ? '0px' : '2px',
       left: this.state.listenState === 'listening' ? '5px' : '8px'
@@ -267,8 +300,7 @@ export default class ActivateListen extends React.Component {
 
     const styleSmall = {
       transition: `all ${parseFloat(this.rando(this.state.smallTime)/1000)}s`,
-      // transform: `rotate(${this.rando(this.state.smallSpin)}deg) scale(${this.state.smallScale})`,
-      transform: `rotate(0deg) scale(${this.state.smallScale})`,
+      transform: `rotate(${this.state.smallSpin}deg) scale(${this.state.smallScale})`,
       opacity: this.state.smallOpacity,
       top: this.state.listenState === 'listening' ? '-35px' : '6px',
       left: this.state.listenState === 'listening' ? '0px' : '0px',
@@ -285,6 +317,10 @@ export default class ActivateListen extends React.Component {
     const styleArc = {
       opacity: this.state.arcOpacity,
       filter: this.state.arcFilter,
+    }
+
+    const styleArcShadow = {
+      opacity: this.state.arcShadowOpacity
     }
 
     const bigImage = this.state.listenState === 'listening' ? circleCW : circleIO;
@@ -306,7 +342,7 @@ export default class ActivateListen extends React.Component {
           <figure className="listen-arc-container" style={ styleArc }>
             <img src={ arcReactor } className="listen-ai-arc" alt="arc-reactor" />
           </figure>
-          <figure className="listen-arcshadow-container" style={{ visibility: 'hidden' }}>
+          <figure className="listen-arcshadow-container" style={ styleArcShadow }>
             <img src={ arcReactor } className="listen-ai-arcshadow" alt="arc-reactor-shadow" />
           </figure>
         </article>

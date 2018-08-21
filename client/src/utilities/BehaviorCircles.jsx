@@ -1,5 +1,6 @@
 const BehaviorForCircles = {
   async smallProcessing(setTheState, rando, spin, makeTimerLadder) {
+    console.log('smallProcessing')
     let diceRoll = Math.ceil(Math.random() * 6)
     if(diceRoll < 6) {
       await setTimeout( async () => {
@@ -22,6 +23,7 @@ const BehaviorForCircles = {
   },
 
   smallChilling(setTheState, rando, spin) {
+    console.log('smallChilling')
     let num = rando(200, 45)
     setTheState('smallSpin', spin + num, 'smallTime', (num * 90) < 7000 ? 18000 : (num * 90))
     setTimeout(() => {
@@ -30,18 +32,22 @@ const BehaviorForCircles = {
   },
 
   smallListening(setTheState, rando, spin) {
-    setTheState('smallTime', 8000, 'smallSpin', spin + 360)
+    console.log('smallListening')
+    setTheState('smallTime', 8000, 'smallSpin', 0)
   },
 
   bigProcessing(setTheState, rando) {
+    console.log('bigProcessing')
     setTheState('bigSpin', rando(720) - 360, 'bigTime', rando(2500, 1500))
   },
 
   bigChilling(setTheState, rando) {
+    console.log('bigChilling')
     setTheState('bigSpin', rando(720) - 360, 'bigTime', rando(14490, 13000))
   },
 
   bigListening(setTheState, rando, spin) {
+    console.log('bigListening')
     setTheState('bigTime', 10000, 'bigSpin', spin + 360)
   },
 

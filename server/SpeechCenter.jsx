@@ -1,4 +1,4 @@
-const SpeechCenter = {
+module.exports = {
   myName(result) {
     if(result.toLowerCase() === 'helios') {
       return true
@@ -13,5 +13,3 @@ const SpeechCenter = {
     }
   },
 }
-
-export default SpeechCenter;
