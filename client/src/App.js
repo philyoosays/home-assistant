@@ -8,7 +8,7 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      speechResults: undefined
+      speechResults: 'HELIOS'
     };
 
     this.setTheState = this.setTheState.bind(this);

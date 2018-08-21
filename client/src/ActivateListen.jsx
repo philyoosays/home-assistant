@@ -1,7 +1,8 @@
 import React from 'react';
 
-import Listener from './Listener';
-import BehaviorCircles from './BehaviorCircles';
+import Listener from './utilities/Listener';
+import SpeechCenter from './utilities/SpeechCenter';
+import BehaviorCircles from './utilities/BehaviorCircles';
 
 import circleIO from './assets/collection-jarvis/circle-inner-outer.png';
 import circleFCW from './assets/collection-jarvis/circlefancy-clockwise.png';
@@ -27,6 +28,8 @@ const {
 
 const { recognition, SpeechRecognitionEvent } = Listener;
 
+const { myName, speechRouter } = SpeechCenter;
+
 export default class ActivateListen extends React.Component {
   constructor(props) {
     super(props)
@@ -50,6 +53,7 @@ export default class ActivateListen extends React.Component {
 
       listenState: 'processing',
       arcOpacity: 1,
+      arcFilter: 'none',
     };
 
     this.setTheState = this.setTheState.bind(this);
@@ -93,11 +97,6 @@ export default class ActivateListen extends React.Component {
 
   componentWillUnmount() {
     this.stopIntervals();
-  }
-
-  stopIntervals() {
-    clearInterval(this.state.bigInterval);
-    clearInterval(this.state.smallInterval);
   }
 
   async handleClick() {
@@ -219,12 +218,25 @@ export default class ActivateListen extends React.Component {
     await this.setState( newState );
   }
 
-  startListening() {
+  startListening(acknowledgeless) {
     recognition.start();
     recognition.onresult = (event) => {
       console.log('Speech event', event)
-      const result = event.results[event.length - 1].transcript;
-
+      const result = event.results['0']['0'].transcript;
+      console.log('Result: ', result);
+      console.log('Event Keys: ', Object.keys(event.results))
+      console.log('MyName: ', myName(result))
+      if(myName(result)) {
+        this.setTheState('arcFilter', 'sepia(100%)');
+        setTimeout(() => {
+          this.startListening(true);
+        }, 2510)
+        recognition.stop();
+      }
+      if(acknowledgeless) {
+        speechRouter(result);
+        this.props.setParentState('speechResults', result);
+      }
     }
     recognition.onspeechend = function() {
       recognition.stop();
@@ -237,6 +249,11 @@ export default class ActivateListen extends React.Component {
     recognition.onerror = function(event) {
       console.log('error')
     }
+  }
+
+  stopIntervals() {
+    clearInterval(this.state.bigInterval);
+    clearInterval(this.state.smallInterval);
   }
 
   render() {
@@ -267,6 +284,7 @@ export default class ActivateListen extends React.Component {
 
     const styleArc = {
       opacity: this.state.arcOpacity,
+      filter: this.state.arcFilter,
     }
 
     const bigImage = this.state.listenState === 'listening' ? circleCW : circleIO;
