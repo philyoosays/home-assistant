@@ -6,7 +6,8 @@ module.exports = {
       return false
     }
   },
-  speechRouter() {
+  speechRouter(req, res, next) {
+    let thePackage = req.body
     switch(true) {
       default:
         break;

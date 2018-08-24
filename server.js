@@ -3,6 +3,7 @@ const express = require('express');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
 const path = require('path');
+const cors = require('cors');
 
 const dataRouter = require('./server/router');
 const controller = require('./server/controller');
@@ -10,15 +11,16 @@ const controller = require('./server/controller');
 // const tokenService = require('./auth/TokenService');
 
 const app = express();
-const PORT = process.env.PORT || 2001;
+const PORT = 6001;
 
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, 'client/build')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cors())
 
 // app.use(tokenService.receiveToken);
-app.use(controller.verifySite)
+// app.use(controller.verifySite)
 
 app.use('/api', dataRouter);
 // app.use('/')

@@ -93,6 +93,7 @@ export default class ActivateListen extends React.Component {
     switch(this.state.listenState) {
       case 'chilling':
         console.log('switch chilling')
+        this.setTheState('arcFilter', 'none')
         bigInterval = setInterval(() => bigChilling(this.setTheState, this.rando), 15000)
         smallInterval = setInterval(() => smallChilling(this.setTheState, this.rando, this.state.smallSpin), this.rando(19000, 12000))
         break;
@@ -240,21 +241,22 @@ export default class ActivateListen extends React.Component {
 
   startListening(acknowledgeless, setTheState) {
     recognition.start();
-    recognition.onresult = (event) => {
+    recognition.onresult = async (event) => {
 
       const result = event.results['0']['0'].transcript;
-      console.log(result)
+      console.log('Listen: ', result)
 
-      if(result.toLowerCase === 'helios') {
-        this.setTheState('arcFilter', 'sepia(100%)');
+      if(result.toLowerCase() === 'helios') {
+        await this.setTheState('arcFilter', 'sepia(100%)');
         setTimeout(() => {
-          this.startListening(true);
+          console.log('happening')
+          this.startListening(true, setTheState);
         }, 2510)
         recognition.stop();
       }
       if(acknowledgeless) {
-        fetch('/api/analyze', {
-          body: JSON.stringify(result),
+        fetch('http://192.168.1.6:6001/api/analyze', {
+          body: JSON.stringify({ result }),
           headers: {
             'content-type': 'application/json',
             secretHandshake: process.env.REACT_APP_SECRET

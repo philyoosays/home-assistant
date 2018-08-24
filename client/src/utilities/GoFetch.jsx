@@ -10,8 +10,8 @@ import TokenService from '../TokenService';
 export default async function GoFetch(fetchMethod, url, needToken, bodyObj) {
 
   if(process.env.NODE_ENV === 'development') {
-    var fetchURL = 'http://localhost:3002' + url;
-    // var fetchURL = 'http://192.168.1.6:3002' + url;
+    // var fetchURL = 'http://localhost:3002' + url;
+    var fetchURL = 'http://192.168.1.6:6001' + url;
   }
 
   let fetchHeaders = {
